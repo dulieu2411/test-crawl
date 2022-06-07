@@ -206,7 +206,7 @@ await doc.loadInfo();
       'Status': `Start crawl page ${index+1}/${numberPage}`,
       'Time': `${new Date().toLocaleString('en-US')}`
     })
-    await test(`https://javhd.icu/categories/censored/page/${index + 1}`);
+    // await test(`https://javhd.icu/categories/censored/page/${index + 1}`);
   }
 };
 
