@@ -7,7 +7,29 @@ const { Cluster } = require("puppeteer-cluster");
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const creds = require('./client-secret.json')
 var http = require('http');
-http.createServer(()=>{}).listen(process.env.PORT || 6000)
+
+function startKeepAlive() {
+  setInterval(function() {
+      var options = {
+          host: 'your_app_name.herokuapp.com',
+          port: process.env.PORT || 6000,
+          path: '/'
+      };
+      http.get(options, function(res) {
+          res.on('data', function(chunk) {
+              try {
+                  // optional logging... disable after it's working
+                  console.log("HEROKU RESPONSE: " + chunk);
+              } catch (err) {
+                  console.log(err.message);
+              }
+          });
+      }).on('error', function(err) {
+          console.log("Error: " + err.message);
+      });
+  }, 20 * 60 * 1000); // load every 20 minutes
+}
+
 
 const getLinkVideo = async (urlPage, itemInfor, itemOrder, itemCount) => {
   // Create a cluster with 2 workers
@@ -206,10 +228,11 @@ await doc.loadInfo();
       'Status': `Start crawl page ${index+1}/${numberPage}`,
       'Time': `${new Date().toLocaleString('en-US')}`
     })
-    // await test(`https://javhd.icu/categories/censored/page/${index + 1}`);
+    await test(`https://javhd.icu/categories/censored/page/${index + 1}`);
   }
 };
 
 let mainSheet;
 let statusSheet
 pagePagination();
+startKeepAlive();
