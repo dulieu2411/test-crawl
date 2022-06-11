@@ -6,28 +6,21 @@ puppeteer.use(AdblockerPlugin());
 const { Cluster } = require("puppeteer-cluster");
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const creds = require('./client-secret.json')
-var http = require('http');
+const axios = require('axios');
+
+http.createServer(()=>{}).listen(process.env.PORT || 6000);
 
 function startKeepAlive() {
   setInterval(function() {
-      var options = {
-          host: 'your_app_name.herokuapp.com',
-          port: process.env.PORT || 6000,
-          path: '/'
-      };
-      http.get(options, function(res) {
-          res.on('data', function(chunk) {
-              try {
-                  // optional logging... disable after it's working
-                  console.log("HEROKU RESPONSE: " + chunk);
-              } catch (err) {
-                  console.log(err.message);
-              }
-          });
-      }).on('error', function(err) {
-          console.log("Error: " + err.message);
-      });
-  }, 20 * 60 * 1000); // load every 20 minutes
+    axios
+    .get('https://popputeer.herokuapp.com/')
+    .then(res => {
+      console.success(`Send request for alive`);
+    })
+    .catch(error => {
+      console.error(`Can't send request for alive`);
+    });
+  }, 60 * 1000); // load every 20 minutes
 }
 
 
@@ -212,7 +205,7 @@ function sleep(ms) {
 }
 
 const pagePagination = async () => {
-  const doc = new GoogleSpreadsheet('1BUY02K7hGe-J2WI-AdcOen0PJqk_N3-kRidNixDuOvc');
+  const doc = new GoogleSpreadsheet('1zyAjFzQ7iYUyGRa7yO_svdg8b6E6YRzT1zaMriFzBVo');
 await doc.useServiceAccountAuth({
     client_email: creds.client_email,
     private_key: creds.private_key,
