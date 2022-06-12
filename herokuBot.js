@@ -9,7 +9,10 @@ const creds = require('./client-secret.json')
 const axios = require('axios');
 var http = require('http');
 
-http.createServer(()=>{}).listen(process.env.PORT || 6000);
+http.createServer(function (req, res) {
+  res.write('Hello World!'); //write a response to the client
+  res.end(); //end the response
+}).listen(8080);
 
 function startKeepAlive() {
   setInterval(function() {
@@ -154,7 +157,7 @@ const getLinkVideo = async (urlPage, itemInfor, itemOrder, itemCount) => {
   await cluster.close();
 };
 
-const test = async (pageCategory) => {
+const test = async (pageCategory, itemStart) => {
   let link = pageCategory;
   const browser = await puppeteer.launch({
     headless: true,
@@ -193,7 +196,9 @@ const test = async (pageCategory) => {
 
   await browser.close();
 
-  for (let index = 0; index < items.length; index++) {
+  for (let index = itemStart; index < items.length; index++) {
+    position.value = index + 1;
+    await currentState.saveUpdatedCells();
     const item = items[index];
     await getLinkVideo(`${item.href}`, item, index + 1, items.length);
   }
@@ -214,19 +219,40 @@ await doc.useServiceAccountAuth({
 await doc.loadInfo();
   mainSheet = doc.sheetsByIndex[0];
   statusSheet = doc.sheetsByIndex[1];
-  let numberPage = 818;
-  for (let index = 300; index < 818; index++) {
+  currentState = doc.sheetsByIndex[2];
+  restartLog = doc.sheetsByIndex[3];
+  
+  // let currentStateData = (await currentState.getRows() || [])[0];
+  await currentState.loadCells('A1:E10');
+  position = currentState.getCell(1, 0);
+  pages = currentState.getCell(1, 1);
+  console.log('XXX', position.value);
+  console.log('XXX', pages.value);
+  await restartLog.addRow({'Time': `${new Date().toLocaleString('en-US')}`});
+  let pagesStart = pages.value + 1;
+  // position.value = position.value + 1
+  // pages.value = pages.value + 1
+  // await currentState.saveUpdatedCells();
+  let numberPage = 818;  
+  for (let index = pages.value; index < 818; index++) {
     await sleep(1000);
-    console.warn(`======================>start get data page ${index}<======================`);
+    pages.value = index + 1;
+    await currentState.saveUpdatedCells();
+    console.warn(`======================>start get data page ${index + 1}<======================`);
     statusSheet.addRow({
       'Status': `Start crawl page ${index+1}/${numberPage}`,
       'Time': `${new Date().toLocaleString('en-US')}`
     })
-    await test(`https://javhd.icu/categories/censored/page/${index + 1}`);
+    let itemStart = pagesStart == pages.value ? position.value : 0;
+    await test(`https://javhd.icu/categories/censored/page/${index + 1}`, itemStart);
   }
 };
 
 let mainSheet;
-let statusSheet
+let statusSheet;
+let currentState;
+let restartLog;
+let position;
+let pages;
 pagePagination();
 startKeepAlive();
