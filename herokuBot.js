@@ -12,7 +12,7 @@ var http = require('http');
 http.createServer(function (req, res) {
   res.write('Hello World!'); //write a response to the client
   res.end(); //end the response
-}).listen(8080);
+}).listen(process.env.PORT || 8080);
 
 function startKeepAlive() {
   setInterval(function() {
@@ -197,10 +197,10 @@ const test = async (pageCategory, itemStart) => {
   await browser.close();
 
   for (let index = itemStart; index < items.length; index++) {
-    position.value = index + 1;
-    await currentState.saveUpdatedCells();
     const item = items[index];
     await getLinkVideo(`${item.href}`, item, index + 1, items.length);
+    position.value = index + 1;
+    await currentState.saveUpdatedCells();
   }
 };
 
@@ -229,15 +229,13 @@ await doc.loadInfo();
   console.log('XXX', position.value);
   console.log('XXX', pages.value);
   await restartLog.addRow({'Time': `${new Date().toLocaleString('en-US')}`});
-  let pagesStart = pages.value + 1;
+  let pagesStart = pages.value;
   // position.value = position.value + 1
   // pages.value = pages.value + 1
   // await currentState.saveUpdatedCells();
   let numberPage = 818;  
   for (let index = pages.value; index < 818; index++) {
     await sleep(1000);
-    pages.value = index + 1;
-    await currentState.saveUpdatedCells();
     console.warn(`======================>start get data page ${index + 1}<======================`);
     statusSheet.addRow({
       'Status': `Start crawl page ${index+1}/${numberPage}`,
@@ -245,6 +243,8 @@ await doc.loadInfo();
     })
     let itemStart = pagesStart == pages.value ? position.value : 0;
     await test(`https://javhd.icu/categories/censored/page/${index + 1}`, itemStart);
+    pages.value = index + 1;
+    await currentState.saveUpdatedCells();
   }
 };
 
